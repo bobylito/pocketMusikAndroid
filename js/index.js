@@ -19,6 +19,7 @@
 var app = {
     // Application Constructor
     initialize: function() {
+        console.log("INIT");
         this.bindEvents();
     },
     // Bind Event Listeners
@@ -33,7 +34,8 @@ var app = {
     // The scope of 'this' is the event. In order to call the 'receivedEvent'
     // function, we must explicity call 'app.receivedEvent(...);'
     onDeviceReady: function() {
-        app.receivedEvent('deviceready');
+        //app.receivedEvent('deviceready');
+        var l = app.list("/");
     },
     // Update DOM on a Received Event
     receivedEvent: function(id) {
@@ -45,5 +47,25 @@ var app = {
         receivedElement.setAttribute('style', 'display:block;');
 
         console.log('Received Event: ' + id);
+    },
+
+    // Retrieve directory list
+    list: function(path){
+      var dirList = "";
+      var request = new XMLHttpRequest();
+
+
+      request.open('GET', 'http://192.168.13.147:9000/list', false);
+      request.onReadyStateChange = function() {
+        if (request.readyState === 4) {
+          if (request.status === 200) {
+            alert("Coucou");
+          }
+        } else {
+
+        }
+      };
+
+      request.send(); 
     }
 };
