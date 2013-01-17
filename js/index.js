@@ -19,7 +19,6 @@
 var app = {
     // Application Constructor
     initialize: function() {
-        console.log("INIT");
         this.bindEvents();
     },
     // Bind Event Listeners
@@ -35,10 +34,40 @@ var app = {
     // The scope of 'this' is the event. In order to call the 'receivedEvent'
     // function, we must explicity call 'app.receivedEvent(...);'
     onDeviceReady: function() {
-      alert("oakasdjc"); 
-      app.list("/").then(function(xhr){
-        alert(xhr);
+      this.loadFiles("");
+    },
+    loadFiles: function (path) {
+      var container = document.getElementById('files');
+      container.innerHTML = "";
+      console.log("load: " + path);
+      app.list(path).then(function(xhr){
+        console.log(xhr.responseText);
+        var files = JSON.parse(xhr.responseText);
+        files.sort(function (f1, f2) {
+          if (f1.isDirectory && f2.isDirectory)
+            return f1.name.toLowerCase() > f2.name.toLowerCase() ? 1 : -1;
+          else if (f1.isDirectory && !f2.isDirectory)
+            return -1;
+          else if (!f1.isDirectory && f2.isDirectory)
+            return 1;
+          else
+            return f1.name.toLowerCase() > f2.name.toLowerCase() ? 1 : -1;
+        }).forEach(function (file) {
+          var li = document.createElement("li");
+          li.className = "file";
+          li.dataset.type = file.isDirectory ? "directory" : "file";
+          li.dataset.path = path + "/" + file.name;
+          li.textContent = file.name;
+          container.appendChild(li);
+        });
       });
+      var self = this;
+      container.onclick = function (event) {
+        var target = event.target;
+        if (target.dataset.type == "directory") {
+          self.loadFiles(target.dataset.path);
+        }
+      };
     },
     // Update DOM on a Received Event
     receivedEvent: function(id) {
@@ -54,6 +83,6 @@ var app = {
 
     // Retrieve directory list
     list: function(path){
-      return window.lib.xhr.get("http://192.168.0.37/list");
+      return window.lib.xhr.get("http://192.168.0.16:9000/list" + path);
     }
 };

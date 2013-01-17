@@ -4,8 +4,8 @@ window.lib = (function(win){
       var defer   = Q.defer(),
           request = new XMLHttpRequest();
       request.open('GET', url, false);
-      request.onload = function( xhr ) {
-        defer.resolve(xhr);
+      request.onload = function( event ) {
+        defer.resolve(request);
       };
 
       request.send();

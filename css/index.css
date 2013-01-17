@@ -108,3 +108,17 @@ h1 {
     animation:fade 3000ms infinite;
     -webkit-animation:fade 3000ms infinite;
 }
+
+li.file {
+  list-style-type: none;
+  font-size: 2em;
+}
+
+li[data-type="directory"] {
+  background: lightblue;
+}
+
+li[data-type="file"] {
+  background: lightgray;
+}
+
