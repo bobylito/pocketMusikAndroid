@@ -27,15 +27,18 @@ var app = {
     // Bind any events that are required on startup. Common events are:
     // 'load', 'deviceready', 'offline', and 'online'.
     bindEvents: function() {
-        document.addEventListener('deviceready', this.onDeviceReady, false);
+        //document.addEventListener('deviceready', this.onDeviceReady, false);
+        this.onDeviceReady();
     },
     // deviceready Event Handler
     //
     // The scope of 'this' is the event. In order to call the 'receivedEvent'
     // function, we must explicity call 'app.receivedEvent(...);'
     onDeviceReady: function() {
-        //app.receivedEvent('deviceready');
-        var l = app.list("/");
+      alert("oakasdjc"); 
+      app.list("/").then(function(xhr){
+        alert(xhr);
+      });
     },
     // Update DOM on a Received Event
     receivedEvent: function(id) {
@@ -51,21 +54,6 @@ var app = {
 
     // Retrieve directory list
     list: function(path){
-      var dirList = "";
-      var request = new XMLHttpRequest();
-
-
-      request.open('GET', 'http://192.168.13.147:9000/list', false);
-      request.onReadyStateChange = function() {
-        if (request.readyState === 4) {
-          if (request.status === 200) {
-            alert("Coucou");
-          }
-        } else {
-
-        }
-      };
-
-      request.send(); 
+      return window.lib.xhr.get("http://192.168.0.37/list");
     }
 };
