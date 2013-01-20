@@ -53,11 +53,14 @@ var app = {
           else
             return f1.name.toLowerCase() > f2.name.toLowerCase() ? 1 : -1;
         }).forEach(function (file) {
-          var li = document.createElement("li");
+          var li = document.createElement("li"),
+              type = file.isDirectory ? "directory" : "file",
+              icon = file.isDirectory ? "icon-folder-close": "icon-file";
+
           li.className = "file";
-          li.dataset.type = file.isDirectory ? "directory" : "file";
+          li.dataset.type = type;
           li.dataset.path = path + "/" + file.name;
-          li.textContent = file.name;
+          li.innerHTML = "<i class='"+icon+"'></i>"+file.name;
           container.appendChild(li);
         });
       });
@@ -83,6 +86,6 @@ var app = {
 
     // Retrieve directory list
     list: function(path){
-      return window.lib.xhr.get("http://192.168.0.16:9000/list" + path);
+      return window.lib.xhr.get("http://192.168.13.147:9000/list" + path);
     }
 };
