@@ -40,6 +40,18 @@ var app = {
       var container = document.getElementById('files');
       container.innerHTML = "";
       console.log("load: " + path);
+
+      if(path != ""){
+        container.appendChild((function(c){
+          var goUp = document.createElement("li"); 
+          goUp.className    = "file";
+          goUp.dataset.type = "directory";
+          goUp.dataset.path = path.replace( /\/[a-zA-Z0-9]*$/, "");
+          goUp.innerHTML    = "<i class='icon-chevron-left'></i> Up";
+          return goUp;
+        })(container));
+      }
+
       app.list(path).then(function(xhr){
         console.log(xhr.responseText);
         var files = JSON.parse(xhr.responseText);
