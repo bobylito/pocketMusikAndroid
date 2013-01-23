@@ -38,6 +38,7 @@ var app = {
     },
     loadFiles: function (path) {
       var container = document.getElementById('files');
+      container.touchEvent = {};
       container.innerHTML = "";
       console.log("load: " + path);
 
@@ -77,12 +78,28 @@ var app = {
         });
       });
       var self = this;
-      container.onclick = function (event) {
-        var target = event.target;
-        if (target.dataset.type == "directory") {
-          self.loadFiles(target.dataset.path);
+      container.addEventListener("touchstart", function(event){ 
+        container.touchEvent[event.changedTouches[0].identifier] = event;
+      }, false);
+      container.addEventListener("touchend", function(event){
+        if( !event || !event.changedTouches || !container.touchEvent[event.changedTouches[0].identifier] ){ 
+          return; 
         }
-      };
+        var target = event.target;
+        var startEvent = container.touchEvent[event.changedTouches[0].identifier];
+        delete container.touchEvent[event.changedTouches[0].identifier];
+        var height = Math.abs(startEvent.changedTouches[0].screenY - event.changedTouches[0].screenY) 
+        if( height < target.clientHeight ){
+          var width = startEvent.changedTouches[0].screenX - event.changedTouches[0].screenX;
+          if( Math.abs(width) < 10 && target.dataset.type == "directory" ){
+            self.loadFiles(target.dataset.path);
+          }else if( -width > ( target.clientWidth / 2 )  ){
+            console.log("Right swipe on : " + startEvent.target.textContent)
+          }else if( width > ( target.clientWidth / 2 )  ){
+            console.log("Left swipe on : " + startEvent.target.textContent)
+          }
+        }
+      }, false);
     },
     // Update DOM on a Received Event
     receivedEvent: function(id) {
