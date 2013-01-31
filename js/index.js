@@ -17,6 +17,9 @@
  * under the License.
  */
 var app = {
+    servUrl: "http://192.168.0.16:9000/",
+    root: "/sdcard/pocketMusik",
+
     // Application Constructor
     initialize: function() {
         this.bindEvents();
@@ -94,9 +97,53 @@ var app = {
           if( Math.abs(width) < 10 && target.dataset.type == "directory" ){
             self.loadFiles(target.dataset.path);
           }else if( -width > ( target.clientWidth / 2 )  ){
-            console.log("Right swipe on : " + startEvent.target.textContent)
+            if( startEvent.target.dataset.type === "file"){
+              var fileTransfer = new FileTransfer();
+              var uri = encodeURI( self.servUrl + "musik" + startEvent.target.dataset.path);
+
+              fileTransfer.download(
+                  uri,
+                  self.root + startEvent.target.dataset.path,
+                  function(entry) {
+                      console.log("download complete: " + entry.fullPath);
+                  },
+                  function(error) {
+                      console.log("download error source " + error.source);
+                      console.log("download error target " + error.target);
+                      console.log("upload error code" + error.code);
+                  }
+              );
+            }
           }else if( width > ( target.clientWidth / 2 )  ){
-            console.log("Left swipe on : " + startEvent.target.textContent)
+            console.log("Left swipe on : " + startEvent.target.textContent);
+            window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function(fs){
+                if( startEvent.target.dataset.type === "file" ){
+                  fs.root.getFile(
+                    self.root + startEvent.target.dataset.path, 
+                    {create: false, exclusive: false}, 
+                    function(fileEntry){
+                      fileEntry.remove( 
+                        function(entry) { console.log("Remove complete: " + startEvent.target.dataset.path); },
+                        function(error) { console.log("Remove failed, error code : " + error.code); }
+                      );
+                    }, 
+                    function(error) { console.log("Failed to load fileEntry, error code :" + error.code); }
+                  );
+                }else{
+                  fs.root.getDirectory(
+                    self.root + startEvent.target.dataset.path, 
+                    {create: false, exclusive: false}, 
+                    function(directoryEntry){
+                      directoryEntry.removeRecursively( 
+                        function(entry) { console.log("Remove complete: " + startEvent.target.dataset.path); },
+                        function(error) { console.log("Remove failed, error code : " + error.code); }
+                      );
+                    }, 
+                    function(error) { console.log("Failed to load directoryEntry, error code :" + error.code); }
+                  );
+                }
+              }, function(error) { console.log("Failed to get fs, error code :" + error.code); }
+            );
           }
         }
       }, false);
@@ -115,6 +162,6 @@ var app = {
 
     // Retrieve directory list
     list: function(path){
-      return window.lib.xhr.get("http://192.168.13.147:9000/list" + path);
+      return window.lib.xhr.get(this.servUrl + "list" + path);
     }
 };
