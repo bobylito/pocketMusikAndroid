@@ -17,7 +17,8 @@
  * under the License.
  */
 var app = {
-    servUrl: "http://192.168.0.16:9000/",
+    servUrl: "http://192.168.13.167:9000/",
+    appRoot: "/pocketMusik",
     root: "/sdcard/pocketMusik",
 
     // Application Constructor
@@ -29,7 +30,6 @@ var app = {
     // Bind any events that are required on startup. Common events are:
     // 'load', 'deviceready', 'offline', and 'online'.
     bindEvents: function() {
-        //document.addEventListener('deviceready', this.onDeviceReady, false);
         this.onDeviceReady();
     },
     // deviceready Event Handler
@@ -75,7 +75,9 @@ var app = {
 
           li.className = "file";
           li.dataset.type = type;
-          li.dataset.path = path + "/" + file.name;
+          li.dataset.path = path;
+          li.dataset.name = file.name;
+          li.dataset.fullPath = path + "/" + file.name;
           li.innerHTML = "<i class='"+icon+"'></i>"+file.name;
           container.appendChild(li);
         });
@@ -95,55 +97,20 @@ var app = {
         if( height < target.clientHeight ){
           var width = startEvent.changedTouches[0].screenX - event.changedTouches[0].screenX;
           if( Math.abs(width) < 10 && target.dataset.type == "directory" ){
-            self.loadFiles(target.dataset.path);
+            self.loadFiles(target.dataset.fullPath);
           }else if( -width > ( target.clientWidth / 2 )  ){
             if( startEvent.target.dataset.type === "file"){
-              var fileTransfer = new FileTransfer();
-              var uri = encodeURI( self.servUrl + "musik" + startEvent.target.dataset.path);
-
-              fileTransfer.download(
-                  uri,
-                  self.root + startEvent.target.dataset.path,
-                  function(entry) {
-                      console.log("download complete: " + entry.fullPath);
-                  },
-                  function(error) {
-                      console.log("download error source " + error.source);
-                      console.log("download error target " + error.target);
-                      console.log("upload error code" + error.code);
-                  }
-              );
+              window.downloader.downloadFile({
+                  fileUrl: self.servUrl + "musik" + startEvent.target.dataset.fullPath,
+                  dirName: self.appRoot + startEvent.target.dataset.path
+              });
             }
           }else if( width > ( target.clientWidth / 2 )  ){
-            console.log("Left swipe on : " + startEvent.target.textContent);
-            window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function(fs){
-                if( startEvent.target.dataset.type === "file" ){
-                  fs.root.getFile(
-                    self.root + startEvent.target.dataset.path, 
-                    {create: false, exclusive: false}, 
-                    function(fileEntry){
-                      fileEntry.remove( 
-                        function(entry) { console.log("Remove complete: " + startEvent.target.dataset.path); },
-                        function(error) { console.log("Remove failed, error code : " + error.code); }
-                      );
-                    }, 
-                    function(error) { console.log("Failed to load fileEntry, error code :" + error.code); }
-                  );
-                }else{
-                  fs.root.getDirectory(
-                    self.root + startEvent.target.dataset.path, 
-                    {create: false, exclusive: false}, 
-                    function(directoryEntry){
-                      directoryEntry.removeRecursively( 
-                        function(entry) { console.log("Remove complete: " + startEvent.target.dataset.path); },
-                        function(error) { console.log("Remove failed, error code : " + error.code); }
-                      );
-                    }, 
-                    function(error) { console.log("Failed to load directoryEntry, error code :" + error.code); }
-                  );
-                }
-              }, function(error) { console.log("Failed to get fs, error code :" + error.code); }
-            );
+            if( startEvent.target.dataset.type === "file" ){
+              self.deleteFile(self.root + startEvent.target.dataset.fullPath);
+            }else{
+              self.deleteFolder(self.root + startEvent.target.dataset.fullPath);
+            }
           }
         }
       }, false);
@@ -163,5 +130,35 @@ var app = {
     // Retrieve directory list
     list: function(path){
       return window.lib.xhr.get(this.servUrl + "list" + path);
+    },
+
+    deleteFile: function(path){
+      window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function(fs){
+          fs.root.getFile( path, {create: false, exclusive: false}, 
+            function(fileEntry){
+              fileEntry.remove( 
+                function(entry) { console.log("Remove complete: " + path); },
+                function(error) { console.log("Remove failed, error code : " + error.code); }
+              );
+            }, 
+            function(error) { console.log("Failed to load fileEntry, error code :" + error.code); }
+          );
+        }, function(error) { console.log("Failed to get fs, error code :" + error.code); }
+      );
+    },
+
+    deleteFolder: function(path){
+      window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function(fs){
+          fs.root.getDirectory( path, {create: false, exclusive: false}, 
+            function(directoryEntry){
+              directoryEntry.removeRecursively( 
+                function(entry) { console.log("Remove complete: " + path); },
+                function(error) { console.log("Remove failed, error code : " + error.code); }
+              );
+            }, 
+            function(error) { console.log("Failed to load directoryEntry, error code :" + error.code); }
+          );
+        }, function(error) { console.log("Failed to get fs, error code :" + error.code); }
+      );
     }
 };
