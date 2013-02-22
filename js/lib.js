@@ -8,7 +8,11 @@ window.lib = (function(win){
         defer.resolve(request);
       };
 
-      request.send();
+      try{
+        request.send();
+      } catch(e){
+        defer.reject(e);
+      }
       return defer.promise;
     }
   };

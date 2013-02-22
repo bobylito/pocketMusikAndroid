@@ -34,10 +34,38 @@ var app = {
     // The scope of 'this' is the event. In order to call the 'receivedEvent'
     // function, we must explicity call 'app.receivedEvent(...);'
     onDeviceReady: function() {
-      this.loadFiles("");
+      this.loadFiles( "192.168.0.12", "9000", "");
     },
-    loadFiles: function (path) {
-      var container = document.getElementById('files');
+
+    hideScreens : function(){
+      var screens = document.querySelectorAll( ".screens" );
+      Array.prototype.forEach.call( screens, function( s ){
+        s.style.opacity = 0;
+      });                   
+    },
+
+    showConfigScreen : function(){
+      var self          = this,
+          configScreen  = document.querySelector("#config")[0],
+          okButton      = configScreen.querySelector("button");
+      this.hidescreens();
+      config.style.opacity = 1;
+      okButton.addEventListener("click", function(){
+        console.log("CLIICCKKK");
+        var address = configScreen.querySelector("#address"),
+            port    = configScreen.querySelector("#port");
+        self.loadFiles(address, port, "");
+      }, false);
+    },
+
+    loadFiles: function (adress, port, path) {
+      var mainScreen  = document.getElementById("main"),
+          container   = document.getElementById('files'),
+          self        = this;
+
+      this.hideScreens();
+      mainScreen.style.opacity = 1;
+
       container.touchEvent = {};
       container.innerHTML = "";
       console.log("load: " + path);
@@ -53,7 +81,7 @@ var app = {
         })(container));
       }
 
-      app.list(path).then(function(xhr){
+      app.list(address, port, path).then(function(xhr){
         console.log(xhr.responseText);
         var files = JSON.parse(xhr.responseText);
         files.sort(function (f1, f2) {
@@ -76,8 +104,10 @@ var app = {
           li.innerHTML = "<i class='"+icon+"'></i>"+file.name;
           container.appendChild(li);
         });
+      }, function( err ){
+        self.showConfigScreen();
       });
-      var self = this;
+
       container.addEventListener("touchstart", function(event){ 
         container.touchEvent[event.changedTouches[0].identifier] = event;
       }, false);
@@ -92,7 +122,7 @@ var app = {
         if( height < target.clientHeight ){
           var width = startEvent.changedTouches[0].screenX - event.changedTouches[0].screenX;
           if( Math.abs(width) < 10 && target.dataset.type == "directory" ){
-            self.loadFiles(target.dataset.path);
+            self.loadFiles( address, port, target.dataset.path);
           }else if( -width > ( target.clientWidth / 2 )  ){
             console.log("Right swipe on : " + startEvent.target.textContent)
           }else if( width > ( target.clientWidth / 2 )  ){
@@ -114,7 +144,8 @@ var app = {
     },
 
     // Retrieve directory list
-    list: function(path){
-      return window.lib.xhr.get("http://192.168.13.147:9000/list" + path);
+    list: function(adress, port, path){
+      var self = this;
+      return window.lib.xhr.get("http://10.0.24.74:9000/list" + path);
     }
 };

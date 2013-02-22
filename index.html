@@ -11,8 +11,18 @@
     <body>
         <div class="app">
             <h1>Pocket music</h1>
-            <ul id="files">
-            </ul>
+            <div class="screen" id="main">
+                <ul id="files">
+                </ul>
+            </div>
+            <div class="screen" id="config">
+                <label for="address">Adress</label>
+                <input type="text" name="address" id="address"/>
+                <br/>
+                <label for="port">Port</label>
+                <input type="text" name="port" id="port"/>
+                <button>ok</button>
+            </div>
         </div>
         <script type="text/javascript" src="phonegap.js"></script>
         <script type="text/javascript" src="lib/q.js"></script>
