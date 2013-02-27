@@ -17,7 +17,7 @@
  * under the License.
  */
 var app = {
-    servUrl: "http://192.168.13.167:9000/",
+    servUrl: "http://192.168.0.16:9000/",
     appRoot: "/pocketMusik",
     root: "/sdcard/pocketMusik",
 
@@ -32,6 +32,7 @@ var app = {
     bindEvents: function() {
         this.onDeviceReady();
     },
+
     // deviceready Event Handler
     //
     // The scope of 'this' is the event. In order to call the 'receivedEvent'
@@ -39,6 +40,7 @@ var app = {
     onDeviceReady: function() {
       this.loadFiles("");
     },
+
     loadFiles: function (path) {
       var container = document.getElementById('files');
       container.touchEvent = {};
@@ -83,38 +85,74 @@ var app = {
         });
       });
       var self = this;
-      container.addEventListener("touchstart", function(event){ 
+      container.addEventListener("touchstart", function(event) {
         container.touchEvent[event.changedTouches[0].identifier] = event;
+        event.target.style.backgroundColor = "rgb(255, 255, 255)";
+      }, false);
+      container.addEventListener("touchmove", function(event) {
+        var touch = event.changedTouches[0];
+        var startEvent = container.touchEvent[touch.identifier];
+        var height = Math.abs(startEvent.changedTouches[0].screenY - touch.screenY);
+        var target = event.target;
+        if ( height < target.clientHeight ) {
+          var width = touch.screenX - startEvent.changedTouches[0].screenX;
+          if (width > 10) {
+            var c = 255 - Math.round(Math.min(width / ( target.clientWidth / 2 ), 1) * 255);
+            event.target.style.backgroundColor = "rgb("+c+", "+c+", 255)";
+          } else if (width < -10) {
+            var c = 255 - Math.round(Math.min(-width / ( target.clientWidth / 2 ), 1) * 255);
+            event.target.style.backgroundColor = "rgb(255, "+c+", "+c+")";
+          }
+        }
+        else {
+          event.target.style.backgroundColor = "";
+        }
       }, false);
       container.addEventListener("touchend", function(event){
-        if( !event || !event.changedTouches || !container.touchEvent[event.changedTouches[0].identifier] ){ 
+        var touch = event.changedTouches[0];
+        if( !event || !event.changedTouches || !container.touchEvent[touch.identifier] ){ 
           return; 
         }
         var target = event.target;
-        var startEvent = container.touchEvent[event.changedTouches[0].identifier];
-        delete container.touchEvent[event.changedTouches[0].identifier];
-        var height = Math.abs(startEvent.changedTouches[0].screenY - event.changedTouches[0].screenY) 
-        if( height < target.clientHeight ){
-          var width = startEvent.changedTouches[0].screenX - event.changedTouches[0].screenX;
-          if( Math.abs(width) < 10 && target.dataset.type == "directory" ){
-            self.loadFiles(target.dataset.fullPath);
-          }else if( -width > ( target.clientWidth / 2 )  ){
-            if( startEvent.target.dataset.type === "file"){
-              window.downloader.downloadFile({
-                  fileUrl: self.servUrl + "musik" + startEvent.target.dataset.fullPath,
-                  dirName: self.appRoot + startEvent.target.dataset.path
-              });
-            }
-          }else if( width > ( target.clientWidth / 2 )  ){
-            if( startEvent.target.dataset.type === "file" ){
-              self.deleteFile(self.root + startEvent.target.dataset.fullPath);
-            }else{
-              self.deleteFolder(self.root + startEvent.target.dataset.fullPath);
-            }
+        var startEvent = container.touchEvent[touch.identifier];
+        delete container.touchEvent[touch.identifier];
+        var height = Math.abs(startEvent.changedTouches[0].screenY - touch.screenY) 
+        if ( height < target.clientHeight ) {
+          var width = startEvent.changedTouches[0].screenX - touch.screenX;
+          if ( Math.abs(width) < 10 ) {
+            self.tap(target);
+          } else if( -width > ( target.clientWidth / 2 )  ) {
+            self.swipeRight(target);
+          } else if( width > ( target.clientWidth / 2 )  ) {
+            self.swipeLeft(target);
           }
         }
+        event.target.style.backgroundColor = "";
       }, false);
     },
+
+    tap: function(target) {
+      if (target.dataset.type == "directory")
+        this.loadFiles(target.dataset.fullPath);
+    },
+
+    swipeLeft: function (target) {
+      if ( target.dataset.type === "file" ) {
+        this.deleteFile(this.root + target.dataset.fullPath);
+      } else {
+        this.deleteFolder(this.root + target.dataset.fullPath);
+      }
+    },
+
+    swipeRight: function (target) {
+      if ( target.dataset.type === "file") {
+        window.downloader.downloadFile({
+          fileUrl: self.servUrl + "musik" + target.dataset.fullPath,
+          dirName: self.appRoot + target.dataset.path
+        });
+      }
+    },
+
     // Update DOM on a Received Event
     receivedEvent: function(id) {
         var parentElement = document.getElementById(id);
