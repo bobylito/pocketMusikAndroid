@@ -246,6 +246,5 @@ var app = {
           );
         }, function(error) { console.log("Failed to get fs, error code :" + error.code); }
       );
->>>>>>> 64dacc396fe4ff0c5c74b98d967f3935788f317c
     }
 };
