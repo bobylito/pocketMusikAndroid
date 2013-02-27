@@ -8,9 +8,9 @@
         <link rel="stylesheet" type="text/css" href="css/index.css" />
         <title>Pocket Musik aka FUCK YOU SPOTIFY</title>
     </head>
-    <body>
+    <body onload="app.initialize()">
         <div class="app">
-            <h1>Pocket music</h1>
+            <h1>Pocket music <i class="loader icon-spinner icon-spin"></i></h1>
             <div class="screen" id="main">
                 <ul id="files">
                 </ul>
@@ -32,7 +32,8 @@
         <script type="text/javascript" src="js/index.js"></script>
 
         <script type="text/javascript">
-            app.initialize();
+            //app.initialize();
+            console.log(cordova);
         </script>
     </body>
 </html>

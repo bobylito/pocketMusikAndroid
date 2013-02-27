@@ -78,6 +78,12 @@ h1 {
     color:#ddd;
 }
 
+h1 > loader {
+  position: absolute;
+  right   : 0;
+  top     : 0;
+}
+
 #files {
     margin-top:6em;
 }

@@ -19,43 +19,57 @@
 var app = {
     // Application Constructor
     initialize: function() {
+        console.log("oui");
         this.bindEvents();
+        this.hideScreens();
     },
     // Bind Event Listeners
     //
     // Bind any events that are required on startup. Common events are:
     // 'load', 'deviceready', 'offline', and 'online'.
     bindEvents: function() {
-        //document.addEventListener('deviceready', this.onDeviceReady, false);
-        this.onDeviceReady();
+        console.log("oui oui");
+        document.addEventListener('deviceready', app.onDeviceReady, false);
+        //this.onDeviceReady();
     },
     // deviceready Event Handler
     //
     // The scope of 'this' is the event. In order to call the 'receivedEvent'
     // function, we must explicity call 'app.receivedEvent(...);'
     onDeviceReady: function() {
-      this.loadFiles( "192.168.0.12", "9000", "");
+      console.log("device ready!");
+      app.loadFiles( "192.168.0.12", "9000", "");
     },
 
     hideScreens : function(){
-      var screens = document.querySelectorAll( ".screens" );
+      console.log("Nothing to see");
+      var screens = document.querySelectorAll( ".screen" );
       Array.prototype.forEach.call( screens, function( s ){
-        s.style.opacity = 0;
+        s.style.opacity = "0";
       });                   
     },
 
     showConfigScreen : function(){
       var self          = this,
-          configScreen  = document.querySelector("#config")[0],
+          configScreen  = document.querySelector("#config"),
           okButton      = configScreen.querySelector("button");
-      this.hidescreens();
-      config.style.opacity = 1;
+      this.hideScreens();
+      console.log(configScreen)
+      configScreen.style.opacity = 1;
       okButton.addEventListener("click", function(){
-        console.log("CLIICCKKK");
         var address = configScreen.querySelector("#address"),
             port    = configScreen.querySelector("#port");
+        console.log(address, port);
         self.loadFiles(address, port, "");
       }, false);
+    },
+
+    loading:function(isLoading){
+      var spinner = document.querySelector(".loader");
+      if(isLoading)
+        spinner.style.visibility = "visible";
+      else 
+        spinner.style.visibility = "hidden";
     },
 
     loadFiles: function (adress, port, path) {
@@ -64,7 +78,7 @@ var app = {
           self        = this;
 
       this.hideScreens();
-      mainScreen.style.opacity = 1;
+      mainScreen.style.opacity = "1";
 
       container.touchEvent = {};
       container.innerHTML = "";
@@ -81,6 +95,7 @@ var app = {
         })(container));
       }
 
+      this.loading(true);
       app.list(address, port, path).then(function(xhr){
         console.log(xhr.responseText);
         var files = JSON.parse(xhr.responseText);
@@ -105,8 +120,11 @@ var app = {
           container.appendChild(li);
         });
       }, function( err ){
-        self.showConfigScreen();
-      });
+        console.log("bad request : maybe bad config");
+        return self.showConfigScreen();
+      }).fin(function(){
+        self.loading(false);
+      }).done();
 
       container.addEventListener("touchstart", function(event){ 
         container.touchEvent[event.changedTouches[0].identifier] = event;
