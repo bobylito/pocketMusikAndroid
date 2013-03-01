@@ -17,7 +17,9 @@
  * under the License.
  */
 var app = {
-    servUrl: "http://192.168.0.16:9000/",
+    servUrl: function(ip, port){
+        return "http://"+ (ip?ip:"192.168.0.1") +":"+ (port?port:9000) +"/"
+    },
     appRoot: "/pocketMusik",
     root: "/sdcard/pocketMusik",
 
@@ -57,12 +59,11 @@ var app = {
           configScreen  = document.querySelector("#config"),
           okButton      = configScreen.querySelector("button");
       this.hideScreens();
-      console.log(configScreen)
       configScreen.style.opacity = 1;
       okButton.addEventListener("click", function(){
-        var address = configScreen.querySelector("#address"),
-            port    = configScreen.querySelector("#port");
-        console.log(address, port);
+        var address = configScreen.querySelector("#address").value,
+            port    = configScreen.querySelector("#port").value;
+        console.log("new configuration : " + address + ":" + port);
         self.loadFiles(address, port, "");
       }, false);
     },
@@ -75,7 +76,7 @@ var app = {
         spinner.style.visibility = "hidden";
     },
 
-    loadFiles: function (adress, port, path) {
+    loadFiles: function (ip, port, path) {
       var mainScreen  = document.getElementById("main"),
           container   = document.getElementById('files'),
           self        = this;
@@ -99,7 +100,7 @@ var app = {
       }
 
       this.loading(true);
-      app.list(address, port, path).then(function(xhr){
+      app.list(ip, port, path).then(function(xhr){
         console.log(xhr.responseText);
         var files = JSON.parse(xhr.responseText);
         files.sort(function (f1, f2) {
@@ -125,7 +126,7 @@ var app = {
           container.appendChild(li);
         });
       }, function( err ){
-        console.log("bad request : maybe bad config");
+        console.log("bad request : maybe bad config" + err.toString());
         return self.showConfigScreen();
       }).fin(function(){
         self.loading(false);
@@ -170,7 +171,7 @@ var app = {
           if ( Math.abs(width) < 10 ) {
             self.tap(target);
           } else if( -width > ( target.clientWidth / 2 )  ) {
-            self.swipeRight(target);
+            self.swipeRight(target, ip, port);
           } else if( width > ( target.clientWidth / 2 )  ) {
             self.swipeLeft(target);
           }
@@ -192,10 +193,10 @@ var app = {
       }
     },
 
-    swipeRight: function (target) {
+    swipeRight: function (target, ip, port) {
       if ( target.dataset.type === "file") {
         window.downloader.downloadFile({
-          fileUrl: self.servUrl + "musik" + target.dataset.fullPath,
+          fileUrl: self.servUrl(ip, port) + "musik" + target.dataset.fullPath,
           dirName: self.appRoot + target.dataset.path
         });
       }
@@ -214,8 +215,8 @@ var app = {
     },
 
     // Retrieve directory list
-    list: function(adress, port, path){
-      return window.lib.xhr.get(this.servUrl + "list" + path);
+    list: function(ip, port, path){
+      return window.lib.xhr.get( this.servUrl(ip, port) + "list" + path);
     },
 
     deleteFile: function(path){
