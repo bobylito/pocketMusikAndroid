@@ -64,6 +64,8 @@ var app = {
         var address = configScreen.querySelector("#address").value,
             port    = configScreen.querySelector("#port").value;
         console.log("new configuration : " + address + ":" + port);
+        self.ip   = address;
+        self.port = port;
         self.loadFiles(address, port, "");
       }, false);
     },
@@ -88,7 +90,7 @@ var app = {
       container.innerHTML = "";
       console.log("load: " + path);
 
-      if(path != ""){
+      if(path){
         container.appendChild((function(c){
           var goUp = document.createElement("li"); 
           goUp.className    = "file";
@@ -169,9 +171,9 @@ var app = {
         if ( height < target.clientHeight ) {
           var width = startEvent.changedTouches[0].screenX - touch.screenX;
           if ( Math.abs(width) < 10 ) {
-            self.tap(target);
+            self.tap(target, self.ip, self.port);
           } else if( -width > ( target.clientWidth / 2 )  ) {
-            self.swipeRight(target, ip, port);
+            self.swipeRight(target, self.ip, self.port);
           } else if( width > ( target.clientWidth / 2 )  ) {
             self.swipeLeft(target);
           }
@@ -180,9 +182,9 @@ var app = {
       }, false);
     },
 
-    tap: function(target) {
+    tap: function(target, ip, port) {
       if (target.dataset.type == "directory")
-        this.loadFiles(target.dataset.fullPath);
+        this.loadFiles(ip, port, target.dataset.fullPath);
     },
 
     swipeLeft: function (target) {
@@ -196,8 +198,8 @@ var app = {
     swipeRight: function (target, ip, port) {
       if ( target.dataset.type === "file") {
         window.downloader.downloadFile({
-          fileUrl: self.servUrl(ip, port) + "musik" + target.dataset.fullPath,
-          dirName: self.appRoot + target.dataset.path
+          fileUrl: this.servUrl(ip, port) + "musik" + target.dataset.fullPath,
+          dirName: this.appRoot + target.dataset.path
         });
       }
     },

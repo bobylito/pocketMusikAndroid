@@ -84,13 +84,10 @@ h1 > loader {
   top     : 0;
 }
 
-#files {
-    margin-top:6em;
-}
-
 .screen {
-  font-size: 2.5em;
-  text-align:left;
+  margin-top  : 2.5em;
+  font-size   : 2.5em;
+  text-align  : left;
 }
 
 li.file {
