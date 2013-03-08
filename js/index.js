@@ -126,6 +126,8 @@ var app = {
           li.dataset.fullPath = path + "/" + file.name;
           li.innerHTML = "<i class='"+icon+"'></i>"+file.name;
           container.appendChild(li);
+
+          self.checkFile(li, self.root + li.dataset.fullPath, file.isDirectory);
         });
       }, function( err ){
         console.log("bad request : maybe bad config" + err.toString());
@@ -188,7 +190,9 @@ var app = {
     },
 
     swipeLeft: function (target) {
-      if ( target.dataset.type === "file" ) {
+      var isFolder = target.dataset.type !== "file";
+      this.changeIcon(target, isFolder, false);
+      if ( !isFolder ) {
         this.deleteFile(this.root + target.dataset.fullPath);
       } else {
         this.deleteFolder(this.root + target.dataset.fullPath);
@@ -197,6 +201,7 @@ var app = {
 
     swipeRight: function (target, ip, port) {
       if ( target.dataset.type === "file") {
+        this.changeIcon(target, false, true);
         window.downloader.downloadFile({
           fileUrl: this.servUrl(ip, port) + "musik" + target.dataset.fullPath,
           dirName: this.appRoot + target.dataset.path
@@ -219,6 +224,41 @@ var app = {
     // Retrieve directory list
     list: function(ip, port, path){
       return window.lib.xhr.get( this.servUrl(ip, port) + "list" + path);
+    },
+
+    changeIcon: function(element, isDirectory, downloaded){
+      var icon = element.querySelector("i");
+      
+      var toRemove = ( isDirectory 
+        ? ( downloaded ? "icon-folder-close" : "icon-folder-open" )
+        : ( downloaded ? "icon-file" : "icon-save" )
+      );
+
+      var toAdd = ( isDirectory 
+        ? ( downloaded ? "icon-folder-open" : "icon-folder-close" )
+        : ( downloaded ? "icon-save" : "icon-file" )
+      );
+
+      icon.classList.remove(toRemove);
+      icon.classList.add(toAdd);
+    },
+
+    checkFile: function(element, path, isDirectory){
+      var self = this;
+      window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function(fs){
+          var error = function(){};
+
+          if( isDirectory ){
+            fs.root.getDirectory( path, {create: false, exclusive: false}, 
+              function(directoryEntry){
+                directoryEntry.remove(error, function(){ self.changeIcon(element, isDirectory, true); } );
+              }, error);
+          }else{
+            fs.root.getFile( path, {create: false, exclusive: false},
+              function(){ self.changeIcon(element, isDirectory, true); }, error);
+          }
+        }, function(error) { console.log("Failed to get fs, error code :" + error.code); }
+      );
     },
 
     deleteFile: function(path){
