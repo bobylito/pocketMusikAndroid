@@ -45,6 +45,31 @@ body {
     width:100%;
 }
 
+input {
+  font-size : 1em;
+  position  : absolute;
+  right     : 0;
+}
+
+button {
+  font-size     : 1em;
+  background    : gray;
+  display       : block;
+  padding       : 0 0.2em;
+
+position: absolute;
+right: 0;
+margin-top: 0.5em;
+
+}
+
+.screen {
+  margin-top  : 2.5em;
+  font-size   : 2.5em;
+  text-align  : left;
+  position    : relative;
+}
+
 /* Portrait layout (default) */
 .app {
     position:absolute;             /* position in the center of the screen */
@@ -58,6 +83,10 @@ body {
 /* Landscape layout (with min-width) */
 @media screen and (min-aspect-ratio: 1/1) and (min-width:400px) {
     .app {
+    }
+
+    .screen {
+      max-width : 600px;
     }
 }
 
@@ -84,11 +113,6 @@ h1 > loader {
   top     : 0;
 }
 
-.screen {
-  margin-top  : 2.5em;
-  font-size   : 2.5em;
-  text-align  : left;
-}
 
 li.file {
   padding: 0.5em 0 0.5em 0;

@@ -21,7 +21,21 @@ window.lib = (function(win){
       }
       return defer.promise;
     }
+  },
+  store = {
+    set : function(key, value){
+      localStorage.setItem(key, value);
+    },
+    get : function(key){
+      return localStorage.getItem(key);      
+    },
+    remove : function(key){
+      localStorage.removeItem(key);
+    }
   };
 
-  return {xhr:xhr};
+  return {
+    xhr:xhr,
+    store:store
+  };
 })(window)

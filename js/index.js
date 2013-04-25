@@ -17,25 +17,26 @@
  * under the License.
  */
 var app = {
-    servUrl: function(ip, port){
-        return "http://"+ (ip?ip:"192.168.0.1") +":"+ (port?port:9000) +"/"
+    servUrl: function(){
+        var ip   = window.lib.store.get("config.ip"),
+            port = window.lib.store.get("config.port");
+        return "http://"+ (ip) +":"+ (port?port:9000) +"/"
     },
     appRoot: "/pocketMusik",
     root: "/sdcard/pocketMusik",
 
     // Application Constructor
     initialize: function() {
-        console.log("oui");
-        this.bindEvents();
-        this.hideScreens();
+      this.bindEvents();
+      this.hideScreens();
     },
     // Bind Event Listeners
     //
     // Bind any events that are required on startup. Common events are:
     // 'load', 'deviceready', 'offline', and 'online'.
     bindEvents: function() {
-        var readyEvt = window["Cordova"] ? "deviceready" : "DOMContentLoaded";
-        document.addEventListener(readyEvt, app.onDeviceReady, false);
+      var readyEvt = window["Cordova"] ? "deviceready" : "DOMContentLoaded";
+      document.addEventListener(readyEvt, app.onDeviceReady, false);
     },
 
     // deviceready Event Handler
@@ -44,7 +45,14 @@ var app = {
     // function, we must explicity call 'app.receivedEvent(...);'
     onDeviceReady: function() {
       console.log("device ready!");
-      app.loadFiles( "192.168.0.12", "9000", "");
+      var ip   = window.lib.store.get("config.ip"),
+          port = window.lib.store.get("config.port");
+      if( ip === null && port === null){
+        app.showConfigScreen();
+      }
+      else {
+        app.loadFiles(ip, port, "");
+      }
     },
 
     hideScreens : function(){
@@ -65,8 +73,8 @@ var app = {
         var address = configScreen.querySelector("#address").value,
             port    = configScreen.querySelector("#port").value;
         console.log("new configuration : " + address + ":" + port);
-        self.ip   = address;
-        self.port = port;
+        window.lib.store.set("config.ip",  address),
+        window.lib.store.set("config.port",port);
         self.loadFiles(address, port, "");
       }, false);
     },
@@ -132,6 +140,8 @@ var app = {
         });
       }, function( err ){
         console.log("bad request : maybe bad config" + err.toString());
+        window.lib.store.remove("config.ip"),
+        window.lib.store.remove("config.port");
         return self.showConfigScreen();
       }).fin(function(){
         self.loading(false);
