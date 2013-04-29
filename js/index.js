@@ -29,6 +29,7 @@ var app = {
     initialize: function() {
       this.bindEvents();
       this.hideScreens();
+      this.loading(false);
     },
     // Bind Event Listeners
     //
@@ -136,7 +137,12 @@ var app = {
           li.innerHTML = "<i class='"+icon+"'></i>"+file.name;
           container.appendChild(li);
 
-          self.checkFile(li, self.root + li.dataset.fullPath, file.isDirectory);
+          try{
+            self.checkFile(li, self.root + li.dataset.fullPath, file.isDirectory);
+          }
+          catch(e){
+            //Meehh
+          }
         });
       }, function( err ){
         console.log("bad request : maybe bad config" + err.toString());

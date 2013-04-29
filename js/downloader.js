@@ -3,8 +3,13 @@ function Downloader() {}
 Downloader.prototype.downloadFile = function(params, win, fail) {
   if (!win) win = function(){};
   if (!fail) fail = function(){};
-  
-  cordova.exec(win, fail, "Downloader", "downloadFile", [params]);
+ 
+  if(cordova && cordova.exec){ 
+    cordova.exec(win, fail, "Downloader", "downloadFile", [params]);
+  }
+  else {
+    window.open(params.fileUrl);
+  }
 };
 
 window.downloader = new Downloader();
