@@ -52,7 +52,7 @@ var app = {
         app.showConfigScreen();
       }
       else {
-        app.loadFiles(ip, port, "");
+        app.loadFiles( "");
       }
     },
 
@@ -61,7 +61,13 @@ var app = {
       var screens = document.querySelectorAll( ".screen" );
       Array.prototype.forEach.call( screens, function( s ){
         s.style.opacity = "0";
+        s.style.display = "none";
       });                   
+    },
+
+    showScreen: function( elt ){
+        elt.style.opacity = "1";
+        elt.style.display = "block";
     },
 
     showConfigScreen : function(){
@@ -69,14 +75,14 @@ var app = {
           configScreen  = document.querySelector("#config"),
           okButton      = configScreen.querySelector("button");
       this.hideScreens();
-      configScreen.style.opacity = 1;
+      app.showScreen(configScreen);
       okButton.addEventListener("click", function(){
         var address = configScreen.querySelector("#address").value,
             port    = configScreen.querySelector("#port").value;
         console.log("new configuration : " + address + ":" + port);
         window.lib.store.set("config.ip",  address),
         window.lib.store.set("config.port",port);
-        self.loadFiles(address, port, "");
+        self.loadFiles("");
       }, false);
     },
 
@@ -88,13 +94,13 @@ var app = {
         spinner.style.visibility = "hidden";
     },
 
-    loadFiles: function (ip, port, path) {
+    loadFiles: function (path) {
       var mainScreen  = document.getElementById("main"),
           container   = document.getElementById('files'),
           self        = this;
 
       this.hideScreens();
-      mainScreen.style.opacity = "1";
+      app.showScreen(mainScreen);
 
       container.touchEvent = {};
       container.innerHTML = "";
@@ -112,7 +118,7 @@ var app = {
       }
 
       this.loading(true);
-      app.list(ip, port, path).then(function(xhr){
+      app.list(path).then(function(xhr){
         console.log(xhr.responseText);
         var files = JSON.parse(xhr.responseText);
         files.sort(function (f1, f2) {
@@ -132,6 +138,7 @@ var app = {
           li.className = "file";
           li.dataset.type = type;
           li.dataset.path = path;
+          li.dataset.isDirectory = file.isDirectory;
           li.dataset.name = file.name;
           li.dataset.fullPath = path + "/" + file.name;
           li.innerHTML = "<i class='"+icon+"'></i>"+file.name;
@@ -190,9 +197,9 @@ var app = {
         if ( height < target.clientHeight ) {
           var width = startEvent.changedTouches[0].screenX - touch.screenX;
           if ( Math.abs(width) < 10 ) {
-            self.tap(target, self.ip, self.port);
+            self.tap(target);
           } else if( -width > ( target.clientWidth / 2 )  ) {
-            self.swipeRight(target, self.ip, self.port);
+            self.swipeRight(target);
           } else if( width > ( target.clientWidth / 2 )  ) {
             self.swipeLeft(target);
           }
@@ -201,9 +208,9 @@ var app = {
       }, false);
     },
 
-    tap: function(target, ip, port) {
+    tap: function(target) {
       if (target.dataset.type == "directory")
-        this.loadFiles(ip, port, target.dataset.fullPath);
+        this.loadFiles(target.dataset.fullPath);
     },
 
     swipeLeft: function (target) {
@@ -216,14 +223,37 @@ var app = {
       }
     },
 
-    swipeRight: function (target, ip, port) {
-      if ( target.dataset.type === "file") {
+    swipeRight: function (target) {
+      var data = target.dataset;
+      if ( data.type === "file") {
         this.changeIcon(target, false, true);
-        window.downloader.downloadFile({
-          fileUrl: this.servUrl(ip, port) + "musik" + target.dataset.fullPath,
-          dirName: this.appRoot + target.dataset.path
-        });
       }
+      app.download(data.path, data.name, data.isDirectory==="true");
+    },
+
+    download: function( path, name, isDirectory){
+      if( isDirectory ){ 
+        return app
+          .list( "/" + path + "/" + name )
+          .then( function( xhr ){ return xhr.response; })
+          .then( JSON.parse)
+          .then( function(list){
+            return Q.allResolved(list.map(function(file){
+              return app.download(file.path, file.name, file.isDirectory);      
+            }));
+          }).fail(function(err){
+            console.log("APP : 246 > " + err);
+          });
+      }
+      else {
+        return window.downloader.downloadFile({
+          fileUrl: this.servUrl() + "musik/" + encodeURI(path) + "/" + encodeURI(name),
+          dirName: this.appRoot + path
+        }).fail(function(errArgs){
+          console.log(file.name + file.path);
+          console.log("err: "+ errArgs);
+        });
+      } 
     },
 
     // Update DOM on a Received Event
@@ -239,8 +269,8 @@ var app = {
     },
 
     // Retrieve directory list
-    list: function(ip, port, path){
-      return window.lib.xhr.get( this.servUrl(ip, port) + "list" + path);
+    list: function( path){
+      return window.lib.xhr.get( this.servUrl() + "list" + path);
     },
 
     changeIcon: function(element, isDirectory, downloaded){
