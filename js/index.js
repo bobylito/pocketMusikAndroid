@@ -247,7 +247,7 @@ var app = {
       }
       else {
         return window.downloader.downloadFile({
-          fileUrl: this.servUrl() + "musik/" + encodeURI(path) + "/" + encodeURI(name),
+          fileUrl: this.servUrl() + "musik/" + path + "/" + name,
           dirName: this.appRoot + path
         }).fail(function(errArgs){
           console.log(file.name + file.path);
